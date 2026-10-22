@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {dateKey,bookableDays,slotsFor,greenFee,bookingQuote,membershipQuote,categoryFor} from '../assets/logic.mjs';
+test('Moscow date differs from UTC across midnight',()=>assert.equal(dateKey(new Date('2026-10-18T22:00:00Z')),'2026-10-19'));
+test('booking horizon includes exactly next 21 days and skips weekends',()=>{const d=bookableDays('2026-10-18');assert.equal(d[0],'2026-10-19');assert.equal(d.at(-1),'2026-11-06');assert(d.every(x=>![0,6].includes(new Date(x+'T12:00Z').getUTCDay())))});
+test('date arithmetic crosses month and year safely',()=>assert.equal(bookableDays('2026-12-31')[0],'2027-01-01'));
+test('slots stable for given date, not shared mutable data',()=>{const a=slotsFor('2026-10-19'),b=slotsFor('2026-10-19');assert.deepEqual(a,b);a[0].spaces=99;assert.notEqual(a[0].spaces,slotsFor('2026-10-19')[0].spaces);assert(b.every(s=>s.spaces>=0&&s.spaces<=4))});
+test('summer and winter weekday twilight rates',()=>{assert.equal(greenFee('2026-10-19','10:00'),9500);assert.equal(greenFee('2026-11-02','15:00'),4500);assert.equal(greenFee('2026-10-23','10:00'),10500)});
+test('quote rounds buggies up and charges trolley per player',()=>assert.deepEqual(bookingQuote({date:'2026-10-19',time:'10:00',players:3,buggy:true,trolley:true}),{each:9500,green:28500,extras:11300,total:39800}));
+test('invalid prices and party size are rejected',()=>{assert.throws(()=>bookingQuote({date:'not-a-date',time:'10:00',players:2}));assert.throws(()=>bookingQuote({date:'2026-10-19',time:'10:00',players:5}));assert.throws(()=>greenFee('2026-02-30','10:00'))});
+test('membership annual extras and installments',()=>assert.deepEqual(membershipQuote('weekday',true),{annual:168000,levy:2400,locker:12000,total:182400,monthly:18240,joining:180000}));
+test('membership selection follows age before frequency',()=>{assert.equal(categoryFor(16,'all'),'junior');assert.equal(categoryFor(25,'weekday'),'young');assert.equal(categoryFor(40,'weekday'),'weekday');assert.equal(categoryFor(40,'far'),'country')});
+test('Friday winter fees agree with published tariff',()=>{assert.equal(greenFee('2026-11-06','10:00'),7000);assert.equal(greenFee('2026-11-06','15:00'),5000)});
+test('afternoon tee times include the advertised twilight period',()=>{assert.equal(slotsFor('2026-10-19').at(-1).time,'15:30');assert(slotsFor('2026-10-19').some(s=>s.time>='15:00'&&s.spaces>0))});

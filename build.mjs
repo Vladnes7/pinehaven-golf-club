@@ -1,0 +1,8 @@
+import {writeFile,mkdir} from 'node:fs/promises';
+import {PAGES} from './src/pages.mjs';
+import {header,footer} from './src/components.mjs';
+import {HOLES} from './assets/course.mjs';
+const root=new URL('./',import.meta.url);
+for(const [route,page] of Object.entries(PAGES)){const dir=new URL('.'+route,root);await mkdir(dir,{recursive:true});const html=`<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#07533b"><meta name="description" content="Pinehaven. Лесной гольф-клуб, академия и клубный дом. Вымышленный портфолио-проект."><title>${page.title} · Pinehaven</title><link rel="icon" href="/assets/favicon.svg" type="image/svg+xml"><link rel="preload" href="/assets/fonts/manrope.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="/assets/scrollcraft.css"><link rel="stylesheet" href="/assets/style.css"><link rel="stylesheet" href="/assets/experience.css"><link rel="stylesheet" href="/assets/finishing.css"><script defer src="/assets/scrollcraft.js"></script><script type="module" src="/assets/app.mjs"></script></head><body data-page="${route}">${header(route)}<main id="main">${page.render()}</main>${footer()}</body></html>`;await writeFile(new URL('index.html',dir),html)}
+await writeFile(new URL('assets/scorecard.csv',root),'\uFEFFЛунка;Название;Пар;Метры;Индекс\n'+HOLES.map(h=>[h.number,h.name,h.par,h.meters,h.index].join(';')).join('\n'));
+console.log(`Built ${Object.keys(PAGES).length} static pages and scorecard`);

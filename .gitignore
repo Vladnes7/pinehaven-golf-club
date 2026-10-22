@@ -1,0 +1,16 @@
+node_modules/
+dist/
+work/
+verification/
+outputs/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+.DS_Store
+.scrollcraft.json
+/BRIEF.md
+/IMPLEMENTATION.md
+/VERIFICATION.md
